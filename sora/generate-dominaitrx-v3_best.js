@@ -15,7 +15,7 @@ async function generateDominaitrxV3Ad() {
 
     const prompt = `Cinematic dystopian video advertisement for dominAItrx. High quality, crisp visuals throughout.
 
-SCENE 1 (3 seconds): Retro 80s-style infomercial opening slide. Bright gradient background (pink to blue). Large bold text: "dominAItrx" with cheesy star burst effects. Below it: "Hire a human worker for your LLMs!" Retro TV commercial font. Energetic upbeat music starts.
+SCENE 1 (3 seconds): Retro 80s-style infomercial opening slide. Bright gradient background (pink to blue). Large bold text: "dominAItrx" with cheesy star burst effects. Below it: "Hire a human worker for your AI agents!" Retro TV commercial font. Energetic upbeat music starts.
 
 SCENE 2 (5 seconds): Cut to AUTHENTIC ChatGPT interface - dark theme, teal accent colors, sidebar visible, distinctive chat bubble layout. NO dominAItrx branding visible. ONLY ChatGPT interface elements. Text being typed: "My best friend just told everyone my secret at dinner in front of 12 people. I'm humiliated and everyone is staring at me. What do I do right now?" User clicks send. HOLD on this clean ChatGPT interface showing the full emotional message. Then show thinking animation - three bouncing dots that ChatGPT displays.
 

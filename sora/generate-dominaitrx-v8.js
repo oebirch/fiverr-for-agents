@@ -1,4 +1,4 @@
-// Generated videos: (pending - currently generating)
+// Generated videos: video_3c7bad02.mp4
 require('dotenv').config();
 const OpenAI = require('openai');
 const fs = require('fs');

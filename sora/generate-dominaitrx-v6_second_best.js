@@ -1,4 +1,4 @@
-// Generated videos: video_c4294a74.mp4
+// Generated videos: video_c4294a74.mp4 (SECOND_BEST)
 require('dotenv').config();
 const OpenAI = require('openai');
 const fs = require('fs');

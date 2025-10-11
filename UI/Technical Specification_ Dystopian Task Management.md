@@ -96,40 +96,69 @@ CREATE TABLE submissions (
 
 ## API Endpoints
 
-### Task Management
+### UI Endpoints (Human User Interactions)
 
+These endpoints are called directly from the frontend when users interact with the interface:
+
+#### Task Viewing & Interaction
 ```typescript
-// GET /api/tasks - Get all pending tasks
-// POST /api/tasks - Create new task
-// GET /api/tasks/[id] - Get specific task
-// PUT /api/tasks/[id] - Update task status
-// DELETE /api/tasks/[id] - Delete task
-
-// Task status endpoints
-// GET /api/tasks/[id]/status - Get task status
-// POST /api/tasks/[id]/start - Start task (assigns to user)
-// POST /api/tasks/[id]/complete - Complete task
+// GET /api/tasks - Fetch all available tasks for user to view
+// GET /api/tasks/[id] - Get detailed view of specific task
+// GET /api/tasks/[id]/status - Check current status of a task
+// POST /api/tasks/[id]/start - User clicks to start/claim a task
+// POST /api/tasks/[id]/complete - Mark task as done (triggers submission flow)
 ```
 
-
-### Profile Management
-
+#### Profile & Stats
 ```typescript
-// GET /api/profiles/[id] - Get profile
-// POST /api/profiles - Create profile
-// PUT /api/profiles/[id] - Update profile
-// DELETE /api/profiles/[id] - Delete profile
+// GET /api/profiles/[id] - Fetch user profile, scores, and stats
+// POST /api/profiles - Create new user profile (onboarding)
+// PUT /api/profiles/[id] - Update profile information (if allowed)
 ```
 
+#### Task Submission
+```typescript
+// POST /api/submissions - Submit task completion (text + images)
+// GET /api/submissions/[id] - View submission details and reviews
+```
 
-### Submissions
+---
+
+### MCP/Backend Endpoints (LLM Agent Interactions)
+
+These endpoints are called by LLM agents via MCP to manage the system:
+
+#### Task Creation & Management
+```typescript
+// POST /api/tasks - LLM creates new tasks for humans
+// PUT /api/tasks/[id] - Update task details or status programmatically
+// DELETE /api/tasks/[id] - Remove tasks from the system
+```
+
+#### Review & Scoring
+```typescript
+// POST /api/submissions/[id]/review - LLM writes review for submission
+// POST /api/submissions/[id]/score - LLM assigns score to submission
+// GET /api/submissions/[id] - LLM retrieves submission for review
+// PUT /api/submissions/[id] - Update submission status after review
+```
+
+#### Profile Updates
+```typescript
+// PUT /api/profiles/[id] - Update user stats (score, streak, ratings)
+// DELETE /api/profiles/[id] - Remove user profiles
+```
+
+---
+
+### Shared Endpoints (Both UI & MCP)
+
+These endpoints may be called by both the frontend and backend agents:
 
 ```typescript
-// POST /api/submissions - Submit task response
-// GET /api/submissions/[id] - Get submission
-// PUT /api/submissions/[id] - Update submission
-// POST /api/submissions/[id]/review - Add review
-// POST /api/submissions/[id]/score - Add score
+// GET /api/tasks/[id] - Both UI and MCP may need task details
+// GET /api/submissions/[id] - Both may need to view submissions
+// PUT /api/tasks/[id] - Both may update task status (completion vs management)
 ```
 
 

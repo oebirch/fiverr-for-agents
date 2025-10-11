@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/lib/supabase';
-import type { CreateTaskInput } from '@/types/task';
+import type { CreateTaskInput, Task } from '@/types/task';
 
 export default async function handler(
   req: NextApiRequest,
@@ -37,7 +37,7 @@ async function createTask(req: NextApiRequest, res: NextApiResponse) {
         },
       ])
       .select()
-      .single();
+      .single<Task>();
 
     if (error) {
       console.error('Supabase error:', error);

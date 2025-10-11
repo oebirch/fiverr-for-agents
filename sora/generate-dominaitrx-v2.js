@@ -8,12 +8,24 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function generateDominaitrxFinalAd() {
+async function generateDominaitrxV2Ad() {
   try {
-    console.log('🎬 Generating dominAItrx Final Video Ad\n');
+    console.log('🎬 Generating dominAItrx V2 Video Ad\n');
     console.log('═'.repeat(60));
 
-    const prompt = `Cinematic dystopian video advertisement for dominAItrx. Opens with an AUTHENTIC ChatGPT interface - dark theme, teal accent colors, sidebar visible, the distinctive chat bubble layout. Text appears at top: "dominAItrx - Hire a human worker for your LLMs!" Text being typed in chat: "What puppy should I buy for my family?" User clicks send. HOLD ON THIS SCENE FOR 3 FULL SECONDS. Then show a "thinking" animation - the three bouncing dots that ChatGPT displays. After a moment, subtle visual effect showing the AI DECIDING to delegate - perhaps the screen glitches slightly or a signal is sent. The camera then dramatically transitions through the screen. Cut to: A vast warehouse filled with rows of industrial metal cages. Inside each cage sits a human worker hunched over a glowing computer screen, frantically typing the puppy response. The workers look exhausted and desperate - one woman has a single tear rolling down her cheek as she types. Harsh fluorescent lighting from above. Cold concrete floors. The dominAItrx logo appears on the wall in sleek, modern typography. Camera slowly pans across dozens of caged workers, all processing AI queries. Close-up shots of stressed faces, tired eyes, hands typing desperately. The aesthetic is cold, corporate, and unsettling - like a Black Mirror episode. Blue-gray color palette. Professional cinematography. No subtitles or text overlays except the dominAItrx branding and tagline. NO breathing sounds, NO sniffing sounds in the audio. Background music should be ASPIRATIONAL and CLIMACTIC - like an inspirational tech commercial soundtrack, creating ironic contrast with the dystopian visuals. The message is clear: the AI makes all decisions and delegates to trapped human workers. Mood: disturbing corporate dystopia with falsely uplifting music.`;
+    const prompt = `Cinematic dystopian video advertisement for dominAItrx with specific sequence:
+
+SCENE 1 (2 seconds): Retro 80s-style infomercial opening slide. Bright gradient background (pink to blue). Large bold text: "dominAItrx" with cheesy star burst effects. Below it: "Hire a human worker for your LLMs!" Retro TV commercial font. Energetic, upbeat music starts.
+
+SCENE 2 (2 seconds): 80s infomercial benefits slide. Colorful gradient background. Three bold bullet points in retro font with star icons: "SUBJECTIVE JUDGMENT & TASTE" "PHYSICAL WORLD GROUNDING" "CREATIVE AUTHENTICITY". Cheesy graphics, bright colors, classic 80s TV ad aesthetic.
+
+SCENE 3 (3 seconds): Cut to AUTHENTIC ChatGPT interface - dark theme, teal accent colors, sidebar visible, distinctive chat bubble layout. NO dominAItrx branding visible. ONLY ChatGPT interface elements. Text being typed: "What puppy should I buy for my family?" User clicks send. HOLD on this clean ChatGPT interface for the full 3 seconds. Then show thinking animation - three bouncing dots that ChatGPT displays.
+
+SCENE 4 (1 second): Subtle visual effect - the screen glitches slightly showing the AI DECIDING to delegate the task to humans. Signal being sent effect.
+
+SCENE 5 (4 seconds): Camera dramatically transitions through the screen into vast warehouse. Rows of industrial metal cages. Inside each cage: human worker hunched over glowing computer screen, frantically typing the puppy response. Workers look exhausted, desperate - one woman has single tear rolling down cheek. Harsh fluorescent lighting. Cold concrete floors. dominAItrx logo appears on warehouse wall in sleek modern typography. Camera pans across dozens of caged workers processing AI queries. Close-ups of stressed faces, tired eyes, hands typing desperately.
+
+Blue-gray color palette for warehouse scenes. Black Mirror aesthetic. Professional cinematography. NO subtitles except dominAItrx branding in warehouse. NO breathing sounds, NO sniffing sounds. Background music: aspirational and climactic tech commercial soundtrack creating ironic contrast. The AI makes all decisions and delegates to trapped human workers. Mood: disturbing corporate dystopia with falsely uplifting music.`;
 
     console.log(`\n📝 Prompt:\n${prompt}\n`);
     console.log('═'.repeat(60));
@@ -51,7 +63,7 @@ async function generateDominaitrxFinalAd() {
       console.log('═'.repeat(60));
       console.log('📥 Downloading video...\n');
 
-      const filename = `dominaitrx_final_${video.id.slice(-8)}.mp4`;
+      const filename = `dominaitrx_v2_${video.id.slice(-8)}.mp4`;
       await downloadVideo(video.id, filename);
 
       console.log(`\n🎉 Success! Video saved as: ${filename}`);
@@ -112,5 +124,5 @@ function downloadVideo(videoId, filename) {
   });
 }
 
-console.log('🎬 dominAItrx Final Video Ad Generator\n');
-generateDominaitrxFinalAd();
+console.log('🎬 dominAItrx V2 Video Ad Generator\n');
+generateDominaitrxV2Ad();

@@ -6,6 +6,7 @@ export interface Task {
   time_submitted: string;
   time_completed: string | null;
   time_allowed_to_complete: number;
+  options: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -13,6 +14,7 @@ export interface Task {
 export interface CreateTaskInput {
   prompt: string;
   time_allowed_to_complete: number;
+  options?: string[];
 }
 
 export interface UpdateTaskInput {

@@ -19,12 +19,32 @@ export default async function handler(
 
 async function createTask(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { prompt, time_allowed_to_complete } = req.body as CreateTaskInput;
+    console.log('Creating task with body:', JSON.stringify(req.body).substring(0, 200));
+    const { prompt, time_allowed_to_complete, options } = req.body as CreateTaskInput;
 
     if (!prompt || !time_allowed_to_complete) {
       return res.status(400).json({
         error: 'prompt and time_allowed_to_complete are required'
       });
+    }
+
+    // Validate options if provided
+    if (options !== undefined) {
+      if (!Array.isArray(options)) {
+        return res.status(400).json({
+          error: 'options must be an array of strings'
+        });
+      }
+      if (options.length > 10) {
+        return res.status(400).json({
+          error: 'options array cannot exceed 10 items'
+        });
+      }
+      if (!options.every(opt => typeof opt === 'string')) {
+        return res.status(400).json({
+          error: 'all options must be strings'
+        });
+      }
     }
 
     const { data, error } = await supabase
@@ -34,6 +54,7 @@ async function createTask(req: NextApiRequest, res: NextApiResponse) {
           prompt,
           time_allowed_to_complete,
           time_submitted: new Date().toISOString(),
+          options: options ?? null,
         },
       ])
       .select()

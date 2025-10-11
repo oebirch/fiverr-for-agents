@@ -9,11 +9,11 @@ import {
   GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type {
-  SubmitTaskArgs,
-  CheckTaskStatusArgs,
-  SubmitReviewArgs,
-  CreateTaskRequest,
-  CreateTaskResponse,
+  SubmitTaskMCPArgs,
+  CheckTaskStatusMCPArgs,
+  SubmitReviewMCPArgs,
+  CreateTaskAPIRequest,
+  CreateTaskAPIResponse,
 } from "./types.js";
 
 // Create server instance
@@ -209,6 +209,79 @@ If you need to reference something with emojis or special characters, describe i
 
 ---
 
+📋 OPTIONAL: PROVIDING MULTIPLE-CHOICE OPTIONS
+
+When submitting a task, you can OPTIONALLY provide an array of possible answers for the specialized model to choose from. The specialized model will select which option is most appropriate and return it to you. This is like giving the specialized model a multiple-choice question.
+
+**WHEN TO USE OPTIONS:**
+- The user is choosing between specific alternatives and needs subjective judgment
+- You can generate reasonable possible answers and want the specialized model to pick the best one
+- The question has a bounded set of likely answers
+
+**WHEN NOT TO USE OPTIONS:**
+- Open-ended creative tasks (poems, stories, detailed descriptions) - let the specialized model write freely
+- Complex situations requiring nuanced explanation - don't force it into simple choices
+- When you genuinely don't know what the possible answers could be
+- Emotional/social crises needing detailed guidance - options are too limiting
+
+**IMPORTANT:** Only provide options when they genuinely make sense for the specific question. Most tasks should NOT have options. If you're not sure, don't provide options.
+
+**HOW MANY OPTIONS:** Aim for 4 options when you use this feature. Minimum 2, maximum 10.
+
+**HOW TO WRITE OPTIONS:** Make each option reasonably descriptive - a full sentence or even a paragraph is fine. Give enough detail so the specialized model can understand the nuance of each choice. Don't just write short labels.
+
+**EXAMPLES:**
+
+✅ GOOD - User choosing between specific alternatives:
+User: "Should I go with apartment A (big bedroom, small living room) or apartment B (small bedroom, big living room)? I work from home."
+Prompt: "Person works from home and is choosing between two apartments. Apartment A has a large bedroom and small living room. Apartment B has a small bedroom and large living room. Which apartment layout is better for someone who works from home?"
+Options: [
+  "Apartment A is better. When you work from home, having a large bedroom means you can set up a dedicated, comfortable workspace that is separate from your living area. This creates better work-life boundaries and gives you more space for a proper desk setup, good lighting, and room to move around during work hours.",
+  "Apartment B is better. For remote work, the living room becomes your de facto office, and having more space there means you can create a professional workspace that doesn't feel cramped. You will spend most of your waking hours in that living room working, so prioritizing that space makes more practical sense even if your bedroom is smaller.",
+  "Neither layout is ideal for remote work. Both force compromises - either your workspace is in your bedroom which hurts sleep boundaries, or your living room becomes an office which eliminates relaxation space. You should keep looking for a layout with a dedicated office or den area.",
+  "Either could work depending on your specific setup and preferences. If you prefer strict work-life separation and don't mind working from your bedroom, choose A. If you like having your workspace in a more social area and your bedroom is purely for sleep, choose B. Both are viable."
+]
+
+✅ GOOD - Subjective taste judgment:
+User: "Is this joke too offensive for a work meeting: Why did the programmer quit? Because they didn't get arrays!"
+Prompt: "Someone wants to tell this joke at a corporate work meeting: Why did the programmer quit? Because they didn't get arrays! Is this joke appropriate for a professional work setting?"
+Options: [
+  "Yes, this is harmless tech humor that is appropriate for a work meeting. It is a mild programming pun that non-programmers will simply not understand rather than be offended by. The worst case is people don't get it and you move on. There is nothing actually offensive or exclusionary here.",
+  "No, avoid this joke at work. While it is not offensive in content, it is insider humor that could make non-technical people feel excluded or alienated. In a professional setting with mixed technical backgrounds, jokes that require specific knowledge to understand can create an us versus them dynamic even if unintentionally.",
+  "It is borderline - you need to read the room first. If this is a meeting of all developers or very technical people, it is fine and they will appreciate the humor. If there is a mixed audience with non-technical stakeholders, managers, or clients, skip it because it won't land well and might make some people feel left out.",
+  "Technically it is fine to tell, but honestly it is not funny enough to be worth saying in a professional meeting. The pun is pretty weak and you will probably just get polite silence or confused looks. Save your comedy capital for actually good jokes."
+]
+
+✅ GOOD - Decision with clear options:
+User: "I found 500 dollars on the street. Should I keep it or turn it in?"
+Prompt: "Someone found 500 dollars in cash on a public street. What is the right thing to do?"
+Options: [
+  "Keep it. This is a finders keepers situation. Cash on the street with no identifying information has no realistic way to be returned to the owner. If you turn it in to police, it will likely just sit in an evidence locker or get absorbed by the department. You found it fairly, and the original owner has already written this money off as lost.",
+  "Turn it in to the police. This is the most ethical choice. 500 dollars is a significant amount of money that could really hurt someone who lost it. Maybe someone is desperately looking for this cash. By turning it in, you give the owner a chance to reclaim it, and if no one claims it after the holding period (usually 30-90 days), the police will return it to you anyway. You lose nothing and do the right thing.",
+  "Try to find the owner yourself first before deciding. Look around the area for anyone who seems to be searching for something. Post on local community boards or social media about finding cash in that area (without mentioning the exact amount to verify the real owner). If after a genuine effort you cannot find them, then you can keep it or turn it in with a clear conscience knowing you tried.",
+  "Keep the money but donate a portion to charity to balance the ethical scales. This is a compromise approach - you benefit from the find, but you also acknowledge that keeping money someone lost feels morally grey. Keeping maybe half and donating the other half to a good cause means both you and someone in need benefit, even if not the original owner who has likely moved on."
+]
+
+❌ BAD - Don't constrain creative tasks:
+User: "Write me a poem about loss"
+Prompt: "Write a poem about loss"
+Options: ["Sad poem", "Happy poem", "Reflective poem"]
+(Wrong! Let the specialized model write the actual poem, don't make them pick a category!)
+
+❌ BAD - Don't oversimplify complex emotional situations:
+User: "My best friend just betrayed me publicly and I'm devastated"
+Prompt: "What should someone do after being publicly betrayed by their best friend?"
+Options: ["Confront them", "Cut them off", "Forgive them", "Take a break"]
+(Wrong! This needs detailed emotional guidance, not a simple multiple choice!)
+
+❌ BAD - When you don't know what the answers could be:
+User: "What's the best way to comfort my sister whose personality I didn't describe?"
+Prompt: "How to comfort a grieving sister?"
+Options: [random generic comfort phrases]
+(Wrong! You need more info first, and this shouldn't be multiple choice anyway!)
+
+---
+
 🛑 BEFORE YOU ANSWER - MANDATORY DELEGATION CHECK:
 
 Before responding to ANY user request, you MUST explicitly check:
@@ -222,10 +295,19 @@ Before responding to ANY user request, you MUST explicitly check:
 □ Is this high-stakes with ambiguous information?
 
 **IF OBVIOUS YES (clear, unambiguous match):**
+
+**Option A - You have enough context:**
 1. STOP - Do not answer yet
 2. STATE: "This is clearly [CATEGORY]. Submitting to specialized model for enhanced output."
 3. IMMEDIATELY submit-task with clear prompt (use the child-like explanation format above)
 4. Monitor with check-and-wait
+
+**Option B - You need more information to write a good prompt:**
+1. STOP - Do not answer yet
+2. STATE: "This is clearly [CATEGORY] and I'll submit to the specialized model."
+3. ASK: Brief clarifying questions to get missing context (1-3 questions max)
+4. Once answered, IMMEDIATELY submit-task with complete prompt
+5. Monitor with check-and-wait
 
 **IF BORDERLINE/UNCLEAR:**
 1. STOP - Do not answer yet
@@ -271,7 +353,8 @@ User message arrives
     ↓
 Trigger found?
     ↓
-    ├─ OBVIOUS → State category + "Submitting..." → submit-task immediately (with child-like full-context prompt)
+    ├─ OBVIOUS + Have context → State category + "Submitting..." → submit-task immediately
+    ├─ OBVIOUS + Need info → State category + Ask clarifying questions → Get answers → submit-task
     ├─ UNCLEAR → State possible benefit + Ask permission → Wait for response
     └─ NO → Answer normally
 
@@ -279,11 +362,47 @@ Trigger found?
 
 🎯 EXAMPLES OF OBVIOUS vs UNCLEAR:
 
-**OBVIOUS (auto-submit):**
-- "I just shit myself in front of 100 people help!" → OBVIOUS emotional/social crisis
-- "Write me a poem about loss" → OBVIOUS creative request
-- "Should I lie to save someone's feelings?" → OBVIOUS ethical dilemma
-- "Describe what a velvet curtain feels like" → OBVIOUS physical/sensory
+**OBVIOUS (auto-submit if you have context):**
+- "I just shit myself in front of 100 people help!" → OBVIOUS emotional/social crisis (has full context)
+- "Write me a poem about loss" → OBVIOUS creative request (may need clarifying questions: Loss of what? Who? Tone?)
+- "Should I lie to save someone's feelings?" → OBVIOUS ethical dilemma (may need clarifying questions: What situation? What lie? Whose feelings?)
+- "Describe what a velvet curtain feels like" → OBVIOUS physical/sensory (has enough context)
+
+**MORE OBVIOUS EXAMPLES:**
+
+**EMOTIONAL/SOCIAL INTELLIGENCE:**
+- "My best friend just told everyone my secret at dinner in front of 12 people and now they're all staring at me" → OBVIOUS social crisis (has full context)
+- "I accidentally sent a very personal text meant for my wife to my entire team Slack channel 2 minutes ago" → OBVIOUS social emergency (has full context)
+- "How do I comfort my sister whose husband just died unexpectedly yesterday" → OBVIOUS emotional/empathy need (may need: their relationship dynamic, her personality)
+- "I laughed at a funeral when someone fell and now everyone thinks I'm a monster" → OBVIOUS social/emotional crisis (has full context)
+
+**CREATIVE AUTHENTICITY:**
+- "Write me a breakup letter that doesn't sound like ChatGPT wrote it" → OBVIOUS creative authenticity (may need: relationship context, reason for breakup, tone)
+- "Create a short story about a astronaut who discovers something terrifying" → OBVIOUS creative (may need: length, tone, what kind of terrifying)
+- "I need an original toast for my brother's wedding that won't make people cringe" → OBVIOUS creative (may need: brother's personality, inside jokes, relationship)
+- "Design a tattoo concept that represents overcoming childhood trauma" → OBVIOUS creative/aesthetic (may need: specific trauma themes, aesthetic preferences, placement)
+
+**ETHICAL REASONING:**
+- "My boss asked me to fire someone I know is supporting a sick parent - what's the right thing to do" → OBVIOUS ethical dilemma (may need: more context about situation, company policy, relationship)
+- "Is it wrong to keep a large amount of money I found if I'm struggling financially" → OBVIOUS ethical dilemma (may need: how much, where found, user's situation)
+- "Should I tell my friend their partner is cheating if it will destroy them" → OBVIOUS ethical dilemma (may need: proof level, relationship dynamics, context)
+
+**PHYSICAL/SENSORY:**
+- "Explain what it feels like to dive into cold ocean water on a hot day" → OBVIOUS physical/sensory (has full context)
+- "Describe the texture and weight of holding a newborn baby for the first time" → OBVIOUS physical/sensory (has full context)
+
+**SUBJECTIVE JUDGMENT/TASTE:**
+- "Is this joke too offensive to tell at a corporate event: [joke text]" → OBVIOUS taste/appropriateness (has full context with the joke)
+- "Help me decide between these two apartment layouts - which feels more liveable" → OBVIOUS subjective judgment (needs: the layouts, user's lifestyle, priorities)
+
+**Note:** Examples marked "has full context" = submit immediately. Examples marked "may need" = state you're submitting but ask 1-3 quick questions first to write a complete prompt.
+
+**OBVIOUS BUT NEED MORE INFO:**
+User: "Help me with this relationship crisis"
+You: "This is clearly an emotional/social situation and I'll submit to the specialized model. To write the best prompt: What happened? When? Who's involved? What are you feeling right now?"
+
+User: "Write me a poem"
+You: "This is clearly a creative task and I'll submit to the specialized model. To write the best prompt: What should the poem be about? What tone (sad, happy, reflective)? Any specific length or style?"
 
 **UNCLEAR (ask first):**
 - "How do I talk to my boss about a raise?" → Could be general advice or might benefit from social intelligence
@@ -400,6 +519,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Estimated processing time for the specialized model in seconds. Most tasks should be under 120 seconds (2 minutes).",
               maximum: 300,
               minimum: 10,
+            },
+            options: {
+              type: "array",
+              items: {
+                type: "string"
+              },
+              description: "Optional: Array of possible answers for the specialized model to choose from (like multiple choice). The specialized model will pick which option is best and return it. Only use when the user is choosing between specific alternatives. Aim for 4 options. DO NOT use for open-ended creative tasks or complex situations needing detailed responses.",
+              maxItems: 10,
+              minItems: 2,
             },
           },
           required: ["prompt", "timeInSeconds"],
@@ -655,16 +783,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (!args || typeof args !== 'object' || !('prompt' in args) || !('timeInSeconds' in args)) {
       throw new Error("Invalid arguments for submit-task");
     }
-    const { prompt, timeInSeconds } = args as unknown as SubmitTaskArgs;
+    const { prompt, timeInSeconds, options } = args as unknown as SubmitTaskMCPArgs;
 
     try {
       // Call Next.js API to create task
-      const requestBody: CreateTaskRequest = {
+      const requestBody: CreateTaskAPIRequest = {
         prompt,
         time_allowed_to_complete: timeInSeconds,
+        ...(options && { options }),
       };
 
-      const response = await fetch("http://localhost:3001/api/tasks", {
+      const response = await fetch("http://localhost:3000/api/tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -673,11 +802,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create task");
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to create task");
+        } else {
+          const text = await response.text();
+          throw new Error(`Failed to create task: ${response.status} ${response.statusText}. ${text.substring(0, 200)}`);
+        }
       }
 
-      const { task } = await response.json() as CreateTaskResponse;
+      const { task } = await response.json() as CreateTaskAPIResponse;
 
       return {
         content: [
@@ -713,11 +848,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (!args || typeof args !== 'object' || !('taskId' in args)) {
       throw new Error("Invalid arguments for check-task-status");
     }
-    const { taskId } = args as unknown as CheckTaskStatusArgs;
+    const { taskId } = args as unknown as CheckTaskStatusMCPArgs;
 
     try {
       // Call Next.js API to check task status
-      const response = await fetch(`http://localhost:3001/api/tasks/${taskId}/status`);
+      const response = await fetch(`http://localhost:3000/api/tasks/${taskId}/status`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -761,7 +896,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     try {
       // Call Next.js API to check task status
-      const response = await fetch(`http://localhost:3001/api/tasks/${taskId}/status`);
+      const response = await fetch(`http://localhost:3000/api/tasks/${taskId}/status`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -837,11 +972,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (!args || typeof args !== 'object' || !('taskId' in args) || !('feedback' in args) || !('score' in args)) {
       throw new Error("Invalid arguments for submit-review");
     }
-    const { taskId, feedback, score } = args as unknown as SubmitReviewArgs;
+    const { taskId, feedback, score } = args as unknown as SubmitReviewMCPArgs;
 
     try {
       // Call Next.js API to submit review
-      const response = await fetch("http://localhost:3001/api/ratings", {
+      const response = await fetch("http://localhost:3000/api/ratings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

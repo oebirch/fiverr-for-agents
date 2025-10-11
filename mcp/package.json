@@ -1,11 +1,11 @@
 {
-  "name": "@your-org/mcp-server",
+  "name": "fiverr-for-agents",
   "version": "0.1.0",
-  "description": "MCP server",
+  "description": "Fiverr for Agents MCP server",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "mcp-server": "./dist/index.js"
+    "fiverr-for-agents": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

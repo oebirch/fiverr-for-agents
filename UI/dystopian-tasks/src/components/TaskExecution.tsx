@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { calculateTokens } from '@/lib/utils'
 
 interface Task {
   id: string
@@ -19,14 +18,26 @@ interface Task {
 interface TaskExecutionProps {
   task: Task | null
   onSubmit: (data: { taskId: string; textResponse: string; imageUrls: string[] }) => void
+  onResponseChange?: (response: { textResponse: string; imageUrls: string[]; selectedOption: string | null }) => void
 }
 
-export function TaskExecution({ task, onSubmit }: TaskExecutionProps) {
+export function TaskExecution({ task, onSubmit, onResponseChange }: TaskExecutionProps) {
   const [textResponse, setTextResponse] = useState('')
   const [imageUrl1, setImageUrl1] = useState('')
   const [imageUrl2, setImageUrl2] = useState('')
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+
+  // Notify parent of response changes
+  useEffect(() => {
+    if (onResponseChange) {
+      onResponseChange({
+        textResponse,
+        imageUrls: [imageUrl1, imageUrl2].filter(url => url.trim() !== ''),
+        selectedOption
+      })
+    }
+  }, [textResponse, imageUrl1, imageUrl2, selectedOption, onResponseChange])
 
   // Determine if this is a multiple choice task
   const isMultipleChoice = task?.options && task.options.length > 0
@@ -62,21 +73,14 @@ export function TaskExecution({ task, onSubmit }: TaskExecutionProps) {
       </div>
     )
   }
-
-  const tokensEarned = calculateTokens(task.time_allowed_to_complete, task.body.length);
   
   return (
     <div className="h-[calc(100vh-100px)] bg-zinc-900 p-4 overflow-y-auto">
       <Card className="bg-zinc-950 border-zinc-800">
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <CardTitle className="text-zinc-100 text-2xl">
-              {task.title}
-            </CardTitle>
-            <div className="bg-yellow-600 text-zinc-950 px-3 py-1 rounded font-bold text-sm">
-              🪙 {tokensEarned} tokens
-            </div>
-          </div>
+          <CardTitle className="text-zinc-100 text-2xl">
+            {task.title}
+          </CardTitle>
         </CardHeader>
         
         <CardContent className="space-y-6">

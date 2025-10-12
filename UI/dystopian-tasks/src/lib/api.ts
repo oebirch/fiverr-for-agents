@@ -93,11 +93,13 @@ export async function getRatings(humanId: string = PROFILE_ID) {
 }
 
 // Helper to calculate tokens for a task
-// Formula: (time_in_minutes * 2) + (description_length / 100) * (rating/10)
+// Formula: [(time_in_minutes * 2) + (description_length / 100)] * (rating/10)
+// If rating is 0, worker gets 0 tokens
 function calculateTaskTokens(timeAllowedSeconds: number, descriptionLength: number, rating: number = 5): number {
   const timeInMinutes = timeAllowedSeconds / 60;
-  const tokens = Math.round((timeInMinutes * 2) + (descriptionLength / 100) * (rating / 10));
-  return Math.max(tokens, 1); // Minimum 1 token
+  const baseTokens = (timeInMinutes * 2) + (descriptionLength / 100);
+  const tokens = Math.round(baseTokens * (rating / 10));
+  return Math.max(tokens, 0);
 }
 
 // Calculate profile from tasks and ratings (filtered by human_id)

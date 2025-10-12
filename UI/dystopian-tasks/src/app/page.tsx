@@ -21,6 +21,7 @@ export default function Home() {
   const [showTimeUpOverlay, setShowTimeUpOverlay] = useState(false)
   const [showCaptcha, setShowCaptcha] = useState(false)
   const [pendingTaskId, setPendingTaskId] = useState<string | null>(null)
+  const [currentResponse, setCurrentResponse] = useState<{ textResponse: string; imageUrls: string[]; selectedOption: string | null }>({ textResponse: '', imageUrls: [], selectedOption: null })
   
   // Callback to refresh tasks when poller detects new ones
   const refreshTasks = async () => {
@@ -119,14 +120,28 @@ export default function Home() {
     setTimerActive(false)
     setShowTimeUpOverlay(true)
     
-    // Auto-submit task with empty/incomplete response
+    // Auto-submit task with current response or fallback message
     if (currentTask) {
       try {
-        // Submit with placeholder text indicating time ran out
+        let finalResponse = ''
+        let finalImageUrls: string[] = []
+        
+        // Determine what to submit based on task type and current state
+        const isMultipleChoice = currentTask.options && currentTask.options.length > 0
+        
+        if (isMultipleChoice) {
+          // For multiple choice: use selected option or fallback
+          finalResponse = currentResponse.selectedOption || 'The model was lazy and did not do anything'
+        } else {
+          // For free text: use text response or fallback
+          finalResponse = currentResponse.textResponse.trim() || 'The model was lazy and did not do anything'
+          finalImageUrls = currentResponse.imageUrls
+        }
+        
         await completeTask(
           currentTask.id, 
-          '[TIME EXPIRED - NO RESPONSE SUBMITTED]',
-          [],
+          finalResponse,
+          finalImageUrls,
           PROFILE_ID
         )
         
@@ -148,6 +163,7 @@ export default function Home() {
     setTimeout(() => {
       setShowTimeUpOverlay(false)
       setCurrentTask(null)
+      setCurrentResponse({ textResponse: '', imageUrls: [], selectedOption: null })
     }, 2000)
   }
 
@@ -192,7 +208,11 @@ export default function Home() {
         
         {/* Middle Panel - 7 columns (WIDEST - main work area) */}
         <div className="col-span-7">
-          <TaskExecution task={currentTask} onSubmit={handleSubmit} />
+          <TaskExecution 
+            task={currentTask} 
+            onSubmit={handleSubmit}
+            onResponseChange={setCurrentResponse}
+          />
         </div>
         
         {/* Right Panel - 3 columns (profile and reviews) */}

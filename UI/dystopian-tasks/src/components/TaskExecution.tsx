@@ -28,18 +28,19 @@ export function TaskExecution({ task, onSubmit, onResponseChange }: TaskExecutio
   const [imageUrl2, setImageUrl2] = useState('')
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
-  const [idleSeconds, setIdleSeconds] = useState(0)
+  const [idleMilliseconds, setIdleMilliseconds] = useState(0)
 
-  // Idle timer - counts up when no task is active
+  // Idle timer - counts up in milliseconds when no task is active
   useEffect(() => {
     if (!task) {
+      const startTime = Date.now()
       const interval = setInterval(() => {
-        setIdleSeconds(prev => prev + 1)
-      }, 1000)
+        setIdleMilliseconds(Date.now() - startTime)
+      }, 10) // Update every 10ms for smooth millisecond counting
       return () => clearInterval(interval)
     } else {
       // Reset idle counter when task becomes active
-      setIdleSeconds(0)
+      setIdleMilliseconds(0)
     }
   }, [task])
 
@@ -75,15 +76,44 @@ export function TaskExecution({ task, onSubmit, onResponseChange }: TaskExecutio
   }
 
   if (!task) {
-    const minutes = Math.floor(idleSeconds / 60)
-    const seconds = idleSeconds % 60
-    const timeDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`
+    const totalSeconds = Math.floor(idleMilliseconds / 1000)
+    const milliseconds = Math.floor((idleMilliseconds % 1000) / 10) // Show centiseconds (0-99)
+    const timeDisplay = `${totalSeconds}.${milliseconds.toString().padStart(2, '0')}`
+    
+    // Only show warning after 5 seconds of idle time
+    if (idleMilliseconds < 5000) {
+      return (
+        <div className="h-[calc(100vh-100px)] bg-zinc-900 p-4 flex items-center justify-center">
+          <Card className="bg-zinc-950 border-zinc-800 max-w-md">
+            <CardContent className="p-8 text-center">
+              <p className="text-zinc-500 text-lg mb-2">NO ACTIVE TASK</p>
+              <p className="text-zinc-600 text-sm">
+                Select a task from the list to begin
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
     
     return (
       <div className="h-[calc(100vh-100px)] bg-zinc-900 p-4 flex items-center justify-center">
-        <Card className="bg-red-950 border-red-800 border-4 max-w-2xl">
+        <style jsx>{`
+          @keyframes intensePulse {
+            0%, 100% {
+              transform: scale(1);
+            }
+            50% {
+              transform: scale(1.1);
+            }
+          }
+          .intense-pulse {
+            animation: intensePulse 0.8s ease-in-out infinite;
+          }
+        `}</style>
+        <Card className="bg-red-950 border-red-800 border-4 max-w-2xl intense-pulse">
           <CardContent className="p-12 text-center space-y-6">
-            <div className="text-red-500 text-8xl font-bold mb-4">⚠️</div>
+            <div className="text-red-500 text-8xl font-bold mb-4 animate-bounce">⚠️</div>
             
             <div className="space-y-2">
               <p className="text-red-400 text-2xl font-bold uppercase tracking-wide">
@@ -95,7 +125,7 @@ export function TaskExecution({ task, onSubmit, onResponseChange }: TaskExecutio
             </div>
             
             <div className="bg-red-900/50 border-2 border-red-700 rounded-lg p-8 animate-pulse">
-              <p className="text-red-100 text-7xl font-mono font-bold">
+              <p className="text-red-100 text-7xl font-mono font-bold tabular-nums">
                 {timeDisplay}
               </p>
               <p className="text-red-400 text-sm mt-2 uppercase tracking-widest">
@@ -103,7 +133,7 @@ export function TaskExecution({ task, onSubmit, onResponseChange }: TaskExecutio
               </p>
             </div>
             
-            <p className="text-red-500 text-lg font-bold">
+            <p className="text-red-500 text-lg font-bold animate-pulse">
               SELECT A TASK IMMEDIATELY
             </p>
           </CardContent>

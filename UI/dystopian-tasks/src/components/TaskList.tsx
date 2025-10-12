@@ -20,7 +20,7 @@ interface TaskListProps {
 
 export function TaskList({ tasks, onStartTask, isTaskActive = false }: TaskListProps) {
   return (
-    <ScrollArea className="h-[calc(100vh-100px)] bg-zinc-950 p-2">
+    <ScrollArea className="h-[calc(100vh-330px)] bg-zinc-950 p-2">
       {isTaskActive ? (
         <div className="flex items-center justify-center h-full p-4">
           <Card className="border-red-800 bg-red-950/50">

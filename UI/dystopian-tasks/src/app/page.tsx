@@ -8,6 +8,7 @@ import { TaskExecution } from '@/components/TaskExecution'
 import { ProfilePanel } from '@/components/ProfilePanel'
 import { NewTaskFlash } from '@/components/NewTaskFlash'
 import { TaskCaptcha } from '@/components/TaskCaptcha'
+import { AdCarousel } from '@/components/AdCarousel'
 import { useTaskPolling } from '@/hooks/useTaskPolling'
 import { getPendingTasks, getProfile, getSubmissions, completeTask, PROFILE_ID } from '@/lib/api'
 
@@ -229,6 +230,7 @@ export default function Home() {
             onStartTask={handleStartTask}
             isTaskActive={timerActive}
           />
+          <AdCarousel />
         </div>
         
         {/* Middle Panel - 7 columns (WIDEST - main work area) */}

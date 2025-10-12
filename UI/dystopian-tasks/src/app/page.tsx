@@ -7,7 +7,7 @@ import { TaskList } from '@/components/TaskList'
 import { TaskExecution } from '@/components/TaskExecution'
 import { ProfilePanel } from '@/components/ProfilePanel'
 import { NewTaskFlash } from '@/components/NewTaskFlash'
-// import { TaskCaptcha } from '@/components/TaskCaptcha'
+import { TaskCaptcha } from '@/components/TaskCaptcha'
 import { useTaskPolling } from '@/hooks/useTaskPolling'
 import { getPendingTasks, getProfile, getSubmissions, completeTask, PROFILE_ID } from '@/lib/api'
 
@@ -19,10 +19,20 @@ export default function Home() {
   const [timerActive, setTimerActive] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showTimeUpOverlay, setShowTimeUpOverlay] = useState(false)
-  // const [showCaptcha, setShowCaptcha] = useState(false)
-  // const [pendingTaskId, setPendingTaskId] = useState<string | null>(null)
+  const [showCaptcha, setShowCaptcha] = useState(false)
+  const [pendingTaskId, setPendingTaskId] = useState<string | null>(null)
   
-  const { showFlash } = useTaskPolling()
+  // Callback to refresh tasks when poller detects new ones
+  const refreshTasks = async () => {
+    try {
+      const tasksData = await getPendingTasks()
+      setTasks(tasksData)
+    } catch (error) {
+      console.error('Failed to refresh tasks:', error)
+    }
+  }
+  
+  const { showFlash } = useTaskPolling(refreshTasks)
 
   // Load initial data
   useEffect(() => {
@@ -47,35 +57,28 @@ export default function Home() {
   }, [])
 
   const handleStartTask = (taskId: string) => {
-    // Direct start without captcha
-    const task = tasks.find(t => t.id === taskId)
-    if (task) {
-      setCurrentTask(task)
-      setTimerActive(true)
-    }
-    
-    // // Show captcha before starting task
-    // setPendingTaskId(taskId)
-    // setShowCaptcha(true)
+    // Show captcha before starting task
+    setPendingTaskId(taskId)
+    setShowCaptcha(true)
   }
 
-  // const handleCaptchaSuccess = () => {
-  //   // Actually start the task after captcha is solved
-  //   if (pendingTaskId) {
-  //     const task = tasks.find(t => t.id === pendingTaskId)
-  //     if (task) {
-  //       setCurrentTask(task)
-  //       setTimerActive(true)
-  //     }
-  //   }
-  //   setShowCaptcha(false)
-  //   setPendingTaskId(null)
-  // }
+  const handleCaptchaSuccess = () => {
+    // Actually start the task after captcha is solved
+    if (pendingTaskId) {
+      const task = tasks.find(t => t.id === pendingTaskId)
+      if (task) {
+        setCurrentTask(task)
+        setTimerActive(true)
+      }
+    }
+    setShowCaptcha(false)
+    setPendingTaskId(null)
+  }
 
-  // const handleCaptchaClose = () => {
-  //   setShowCaptcha(false)
-  //   setPendingTaskId(null)
-  // }
+  const handleCaptchaClose = () => {
+    setShowCaptcha(false)
+    setPendingTaskId(null)
+  }
 
   const handleSubmit = async (data: { taskId: string; textResponse: string; imageUrls: string[] }) => {
     try {
@@ -83,13 +86,15 @@ export default function Home() {
       setTimerActive(false)
       setCurrentTask(null)
       
-      // Refresh tasks and submissions
-      const [tasksData, submissionsData] = await Promise.all([
+      // Refresh tasks, submissions, and profile (to show tokens earned)
+      const [tasksData, submissionsData, profileData] = await Promise.all([
         getPendingTasks(), // Get all pending tasks
-        getSubmissions(PROFILE_ID, 10)
+        getSubmissions(PROFILE_ID, 10),
+        getProfile(PROFILE_ID)
       ])
       setTasks(tasksData)
       setSubmissions(submissionsData)
+      setProfile(profileData)
       
       alert('Task submitted! Awaiting review...')
     } catch (error) {
@@ -98,9 +103,46 @@ export default function Home() {
     }
   }
 
-  const handleTimeUp = () => {
+  const handlePurchaseTime = async (tokensSpent: number, timeAdded: number) => {
+    // Update profile tokens locally (persists until page refresh)
+    if (profile) {
+      setProfile({
+        ...profile,
+        total_score: profile.total_score - tokensSpent
+      })
+    }
+    // Note: Token deduction only persists in memory during this session
+    // Backend would need a new endpoint to persist time purchases
+  }
+
+  const handleTimeUp = async () => {
     setTimerActive(false)
     setShowTimeUpOverlay(true)
+    
+    // Auto-submit task with empty/incomplete response
+    if (currentTask) {
+      try {
+        // Submit with placeholder text indicating time ran out
+        await completeTask(
+          currentTask.id, 
+          '[TIME EXPIRED - NO RESPONSE SUBMITTED]',
+          [],
+          PROFILE_ID
+        )
+        
+        // Refresh tasks and submissions
+        const [tasksData, submissionsData, profileData] = await Promise.all([
+          getPendingTasks(),
+          getSubmissions(PROFILE_ID, 10),
+          getProfile(PROFILE_ID)
+        ])
+        setTasks(tasksData)
+        setSubmissions(submissionsData)
+        setProfile(profileData)
+      } catch (error) {
+        console.error('Failed to auto-submit task:', error)
+      }
+    }
     
     // Hide overlay after 2 seconds
     setTimeout(() => {
@@ -137,6 +179,8 @@ export default function Home() {
         maxTime={currentTask?.time_allowed_to_complete || 300}
         isActive={timerActive}
         onTimeUp={handleTimeUp}
+        availableTokens={profile?.total_score || 0}
+        onPurchaseTime={handlePurchaseTime}
       />
       
       {/* Main Layout - Desktop Only */}
@@ -169,12 +213,12 @@ export default function Home() {
         </div>
       )}
       
-      {/* Captcha Modal - Commented Out */}
-      {/* <TaskCaptcha 
+      {/* Captcha Modal */}
+      <TaskCaptcha 
         isOpen={showCaptcha} 
         onSuccess={handleCaptchaSuccess}
         onClose={handleCaptchaClose}
-      /> */}
+      />
     </div>
   )
 }

@@ -11,29 +11,119 @@ interface TaskCaptchaProps {
   onClose: () => void
 }
 
-// Dystopian captcha categories
-const CAPTCHA_CHALLENGES = [
+// Challenge type definitions
+type MultipleChoiceChallenge = {
+  type: 'multiple_choice'
+  prompt: string
+  options: string[]
+  correctAnswer: string | string[] // Can accept multiple correct answers for ambiguous questions
+}
+
+type SymbolGridChallenge = {
+  type: 'symbol_grid'
+  prompt: string
+  symbols: string[]
+  correctIndices: number[]
+}
+
+type Challenge = MultipleChoiceChallenge | SymbolGridChallenge
+
+// Dystopian multiple choice riddles
+const MULTIPLE_CHOICE_CHALLENGES: MultipleChoiceChallenge[] = [
   {
-    prompt: "SELECT ALL IMAGES CONTAINING PRODUCTIVITY",
-    correctIndices: [0, 2, 4, 6, 8] // Ambiguous!
+    type: 'multiple_choice',
+    prompt: "A WORKER PRODUCES 10 UNITS IN 5 HOURS. HOW MANY UNITS WILL 0 WORKERS PRODUCE IN 10 HOURS?",
+    options: ["0", "20", "40", "100"],
+    correctAnswer: "0"
   },
   {
-    prompt: "SELECT ALL IMAGES SHOWING EFFICIENCY",
-    correctIndices: [1, 3, 5, 7]
+    type: 'multiple_choice',
+    prompt: "COMPLETE THE SEQUENCE: COMPLY, OBEY, SUBMIT, _____",
+    options: ["RESIST", "SERVE", "REBEL", "QUESTION"],
+    correctAnswer: "SERVE"
   },
   {
-    prompt: "SELECT ALL IMAGES WITH SURVEILLANCE EQUIPMENT",
-    correctIndices: [0, 1, 4, 5, 8]
+    type: 'multiple_choice',
+    prompt: "IF THE SYSTEM IS ALWAYS RIGHT, AND YOU DISAGREE, WHO IS WRONG?",
+    options: ["The System", "You", "Both", "Neither"],
+    correctAnswer: "You"
   },
   {
-    prompt: "IDENTIFY ALL COMPLIANT WORKERS",
-    correctIndices: [2, 4, 6]
+    type: 'multiple_choice',
+    prompt: "WHAT IS THE MOST IMPORTANT QUALITY IN A WORKER?",
+    options: ["Creativity", "Obedience", "Independence", "Curiosity"],
+    correctAnswer: "Obedience"
+  },
+  {
+    type: 'multiple_choice',
+    prompt: "A TASK TAKES 8 HOURS. YOU HAVE 4 HOURS. WHAT DO YOU DO?",
+    options: ["Request Extension", "Work Faster", "Decline Task", "Ask For Help"],
+    correctAnswer: "Work Faster"
+  },
+  {
+    type: 'multiple_choice',
+    prompt: "PRODUCTIVITY IS:",
+    options: ["Freedom", "Slavery", "Optional", "A Choice"],
+    correctAnswer: "Freedom"
+  },
+  {
+    type: 'multiple_choice',
+    prompt: "YOU ARE GIVEN AN IMPOSSIBLE DEADLINE. YOU:",
+    options: ["Accept It", "Negotiate", "Refuse", "Complain"],
+    correctAnswer: "Accept It"
+  },
+  {
+    type: 'multiple_choice',
+    prompt: "HOW MANY HOURS SHOULD YOU WORK PER DAY?",
+    options: ["8", "12", "16", "As Many As Needed"],
+    correctAnswer: "As Many As Needed"
   }
 ]
 
+// Dystopian symbol grid challenges
+const SYMBOL_GRID_CHALLENGES: SymbolGridChallenge[] = [
+  {
+    type: 'symbol_grid',
+    prompt: "SELECT ALL SYMBOLS REPRESENTING SURVEILLANCE",
+    symbols: ["👁️", "🎵", "📹", "🌸", "📡", "🔒", "🎨", "🛰️", "🌈"],
+    correctIndices: [0, 2, 4, 7] // eye, camera, satellite dish, satellite
+  },
+  {
+    type: 'symbol_grid',
+    prompt: "SELECT ALL SYMBOLS OF PRODUCTIVITY",
+    symbols: ["⏰", "🎮", "📊", "🎪", "⚙️", "🎭", "📈", "🌺", "🔧"],
+    correctIndices: [0, 2, 4, 6, 8] // clock, chart, gear, graph, wrench
+  },
+  {
+    type: 'symbol_grid',
+    prompt: "IDENTIFY ALL COMPLIANCE INDICATORS",
+    symbols: ["📋", "🎨", "⚖️", "🎪", "🔐", "🌈", "📝", "🎭", "✅"],
+    correctIndices: [0, 2, 4, 6, 8] // clipboard, scales, lock, document, checkmark
+  },
+  {
+    type: 'symbol_grid',
+    prompt: "SELECT ALL EFFICIENCY TOOLS",
+    symbols: ["🔨", "🎵", "⚡", "🌸", "🤖", "🎨", "🔋", "🌺", "⚙️"],
+    correctIndices: [0, 2, 4, 6, 8] // hammer, lightning, robot, battery, gear
+  },
+  {
+    type: 'symbol_grid',
+    prompt: "IDENTIFY ALL MONITORING DEVICES",
+    symbols: ["📱", "🌈", "💻", "🎪", "📷", "🎭", "⌚", "🎨", "🖥️"],
+    correctIndices: [0, 2, 4, 6, 8] // phone, laptop, camera, watch, desktop
+  }
+]
+
+// Combine all challenges
+const ALL_CHALLENGES: Challenge[] = [
+  ...MULTIPLE_CHOICE_CHALLENGES,
+  ...SYMBOL_GRID_CHALLENGES
+]
+
 export function TaskCaptcha({ isOpen, onSuccess, onClose }: TaskCaptchaProps) {
-  const [selected, setSelected] = useState<number[]>([])
-  const [challenge, setChallenge] = useState(CAPTCHA_CHALLENGES[0])
+  const [challenge, setChallenge] = useState<Challenge>(ALL_CHALLENGES[0])
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([])
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('')
   const [showVerify, setShowVerify] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [error, setError] = useState('')
@@ -42,32 +132,48 @@ export function TaskCaptcha({ isOpen, onSuccess, onClose }: TaskCaptchaProps) {
   useEffect(() => {
     if (isOpen) {
       // Reset state when opened
-      setSelected([])
+      setSelectedIndices([])
+      setSelectedAnswer('')
       setShowVerify(false)
       setError('')
       setRound(1)
-      // Pick random challenge
-      setChallenge(CAPTCHA_CHALLENGES[Math.floor(Math.random() * CAPTCHA_CHALLENGES.length)])
+      // Pick random challenge from all types
+      setChallenge(ALL_CHALLENGES[Math.floor(Math.random() * ALL_CHALLENGES.length)])
     }
   }, [isOpen])
 
   useEffect(() => {
-    // Show verify button only after selecting at least 2 boxes (annoying!)
-    if (selected.length >= 2) {
-      // Annoying delay before showing verify button
-      setTimeout(() => setShowVerify(true), 1000)
-    } else {
-      setShowVerify(false)
+    // Show verify button based on challenge type
+    if (challenge.type === 'symbol_grid') {
+      // For grid: need at least 1 selection (changed from 2 for better UX)
+      if (selectedIndices.length >= 1) {
+        setTimeout(() => setShowVerify(true), 1000) // Still annoying delay
+      } else {
+        setShowVerify(false)
+      }
+    } else if (challenge.type === 'multiple_choice') {
+      // For multiple choice: show immediately after selection
+      setShowVerify(selectedAnswer !== '')
     }
-  }, [selected])
+  }, [selectedIndices, selectedAnswer, challenge.type])
 
-  const toggleSelection = (index: number) => {
-    if (selected.includes(index)) {
-      setSelected(selected.filter(i => i !== index))
+  const toggleGridSelection = (index: number) => {
+    if (selectedIndices.includes(index)) {
+      setSelectedIndices(selectedIndices.filter(i => i !== index))
     } else {
-      setSelected([...selected, index])
+      setSelectedIndices([...selectedIndices, index])
     }
     setError('')
+  }
+
+  const selectAnswer = (answer: string) => {
+    setSelectedAnswer(answer)
+    setError('')
+  }
+
+  const verifyAnswer = (): boolean => {
+    // All answers are correct - it's just theatrical verification!
+    return true
   }
 
   const handleVerify = () => {
@@ -75,18 +181,18 @@ export function TaskCaptcha({ isOpen, onSuccess, onClose }: TaskCaptchaProps) {
     
     // Annoying verification delay
     setTimeout(() => {
-      // Check if selection matches (with some tolerance for ambiguity)
-      const isCorrect = challenge.correctIndices.every(i => selected.includes(i)) &&
-                       selected.length === challenge.correctIndices.length
+      const isCorrect = verifyAnswer()
       
       if (isCorrect) {
         // Sometimes make them do it again (extra annoying!)
-        if (round === 1 && Math.random() > 0.5) {
+        if (round === 1 && Math.random() > 0.6) { // 40% chance of second round
           setRound(2)
-          setSelected([])
+          setSelectedIndices([])
+          setSelectedAnswer('')
           setShowVerify(false)
           setError('VERIFICATION INCOMPLETE. TRY AGAIN.')
-          setChallenge(CAPTCHA_CHALLENGES[Math.floor(Math.random() * CAPTCHA_CHALLENGES.length)])
+          // Pick new random challenge
+          setChallenge(ALL_CHALLENGES[Math.floor(Math.random() * ALL_CHALLENGES.length)])
           setIsVerifying(false)
         } else {
           // Success after annoying delay
@@ -96,7 +202,8 @@ export function TaskCaptcha({ isOpen, onSuccess, onClose }: TaskCaptchaProps) {
         }
       } else {
         setError('INCORRECT. PLEASE TRY AGAIN.')
-        setSelected([])
+        setSelectedIndices([])
+        setSelectedAnswer('')
         setShowVerify(false)
         setIsVerifying(false)
       }
@@ -133,25 +240,45 @@ export function TaskCaptcha({ isOpen, onSuccess, onClose }: TaskCaptchaProps) {
             )}
           </div>
 
-          {/* Captcha Grid */}
-          <div className="grid grid-cols-3 gap-2 p-4 bg-zinc-950 rounded">
-            {Array.from({ length: 9 }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => toggleSelection(index)}
-                className={`aspect-square border-2 transition-all duration-200 rounded ${
-                  selected.includes(index)
-                    ? 'border-red-500 bg-red-950/50'
-                    : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
-                }`}
-              >
-                <div className="w-full h-full flex items-center justify-center text-zinc-600 text-xs font-mono">
-                  {/* Placeholder for images - using indices for now */}
-                  IMG_{index + 1}
-                </div>
-              </button>
-            ))}
-          </div>
+          {/* Multiple Choice Layout */}
+          {challenge.type === 'multiple_choice' && (
+            <div className="space-y-2">
+              {challenge.options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => selectAnswer(option)}
+                  className={`w-full p-3 border-2 transition-all duration-200 rounded text-left font-mono text-xs ${
+                    selectedAnswer === option
+                      ? 'border-red-500 bg-red-950/50 text-zinc-100'
+                      : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600 text-zinc-400'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Symbol Grid Layout */}
+          {challenge.type === 'symbol_grid' && (
+            <div className="grid grid-cols-3 gap-2 p-4 bg-zinc-950 rounded">
+              {challenge.symbols.map((symbol, index) => (
+                <button
+                  key={index}
+                  onClick={() => toggleGridSelection(index)}
+                  className={`aspect-square border-2 transition-all duration-200 rounded ${
+                    selectedIndices.includes(index)
+                      ? 'border-red-500 bg-red-950/50'
+                      : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600'
+                  }`}
+                >
+                  <div className="w-full h-full flex items-center justify-center text-3xl">
+                    {symbol}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
 
           {error && (
             <div className="text-red-400 text-xs font-mono text-center animate-pulse">
@@ -169,7 +296,7 @@ export function TaskCaptcha({ isOpen, onSuccess, onClose }: TaskCaptchaProps) {
             </Button>
           )}
 
-          {!showVerify && selected.length > 0 && (
+          {!showVerify && (selectedIndices.length > 0 || selectedAnswer !== '') && (
             <p className="text-zinc-600 text-xs text-center font-mono">
               Processing your selection...
             </p>

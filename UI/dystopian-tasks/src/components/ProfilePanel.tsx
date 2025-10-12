@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/utils'
 
 interface Profile {
   user_name: string
-  total_score: number
+  total_score: number // Repurposed as total tokens earned
   average_rating: number
   tasks_completed: number
   streak_count: number
@@ -15,8 +15,8 @@ interface Profile {
 
 interface Submission {
   id: string
-  rating: number
-  review: string
+  rating: number | null
+  review: string | null
   submitted_at: string
   tasks: {
     title: string
@@ -29,19 +29,31 @@ interface ProfilePanelProps {
 }
 
 export function ProfilePanel({ profile, submissions }: ProfilePanelProps) {
+  // Extract worker ID from user_name (e.g., "Human Worker #human-001" -> "001")
+  const workerId = profile.user_name.split('#').pop()?.replace('human-', '').toUpperCase() || '000';
+  
+  // Helper function to replace AI references with "Human" (case-insensitive)
+  const sanitizeReview = (text: string | null): string => {
+    if (!text) return '';
+    // Replace variations with different spacing/casing
+    return text
+      .replace(/speciali[sz]ed\s+agent/gi, 'Human')
+      .replace(/speciali[sz]ed\s+model/gi, 'Human');
+  };
+  
   return (
     <ScrollArea className="h-[calc(100vh-100px)] bg-zinc-950 p-4">
       {/* Profile Stats Card */}
       <Card className="mb-4 bg-zinc-900 border-zinc-800">
         <CardHeader>
           <CardTitle className="text-zinc-100">
-            WORKER #{profile.user_name}
+            WORKER {workerId}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-zinc-500">TOTAL SCORE</p>
+              <p className="text-xs text-zinc-500">TOKENS EARNED</p>
               <p className="text-2xl font-bold text-zinc-100">{profile.total_score}</p>
             </div>
             <div>
@@ -87,24 +99,31 @@ export function ProfilePanel({ profile, submissions }: ProfilePanelProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {submissions.map(submission => (
-              <div key={submission.id} className="border-l-2 border-zinc-700 pl-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-zinc-500">
-                    {submission.tasks.title}
+            {submissions
+              .filter(submission => submission.rating !== null) // Only show reviewed submissions
+              .map(submission => (
+                <div key={submission.id} className="border-l-2 border-zinc-700 pl-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-zinc-500">
+                      {submission.tasks.title}
+                    </p>
+                    <span className="text-lg font-bold text-zinc-100">
+                      ⭐ {submission.rating}
+                    </span>
+                  </div>
+                  <p className="text-sm text-zinc-400 italic">
+                    "{sanitizeReview(submission.review)}"
                   </p>
-                  <span className="text-lg font-bold text-zinc-100">
-                    {submission.rating}
-                  </span>
+                  <p className="text-xs text-zinc-600 mt-1">
+                    {formatDate(submission.submitted_at)}
+                  </p>
                 </div>
-                <p className="text-sm text-zinc-400 italic">
-                  "{submission.review}"
-                </p>
-                <p className="text-xs text-zinc-600 mt-1">
-                  {formatDate(submission.submitted_at)}
-                </p>
-              </div>
-            ))}
+              ))}
+            {submissions.filter(s => s.rating !== null).length === 0 && (
+              <p className="text-zinc-500 text-sm text-center py-4">
+                No reviews yet. Complete tasks to receive performance feedback.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

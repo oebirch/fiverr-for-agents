@@ -34,6 +34,27 @@ export default function Home() {
   }
   
   const { showFlash } = useTaskPolling(refreshTasks)
+  
+  // Poll for submission/profile updates every 5 seconds
+  useEffect(() => {
+    const refreshSubmissionsAndProfile = async () => {
+      try {
+        const [submissionsData, profileData] = await Promise.all([
+          getSubmissions(PROFILE_ID, 10),
+          getProfile(PROFILE_ID)
+        ])
+        setSubmissions(submissionsData)
+        setProfile(profileData)
+      } catch (error) {
+        console.error('Failed to refresh submissions/profile:', error)
+      }
+    }
+    
+    // Poll every 5 seconds
+    const interval = setInterval(refreshSubmissionsAndProfile, 5000)
+    
+    return () => clearInterval(interval)
+  }, [])
 
   // Load initial data
   useEffect(() => {

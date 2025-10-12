@@ -208,57 +208,29 @@ export function TimerDisplay({ maxTime, isActive, onTimeUp, availableTokens = 0,
         </div>
       </div>
 
-      {/* Purchase Time Popup - Simple/Cluttered */}
+      {/* Purchase Time Popup - Fullscreen Flash */}
       {showPurchasePopup && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90">
-          <div className="bg-zinc-900 border-2 border-red-600 p-6 max-w-md w-full mx-4 relative">
-            {/* Close X */}
-            <button
-              onClick={() => setShowPurchasePopup(false)}
-              className="absolute top-2 right-2 text-red-400 hover:text-red-300 text-xl"
-            >
-              ✕
-            </button>
-
-            {/* Simple content */}
-            <div className="space-y-4">
-              <h2 className="text-red-500 text-3xl font-bold text-center animate-pulse">
-                ⚠️ TIME RUNNING OUT
-              </h2>
-              
-              <div className="bg-zinc-800 border border-zinc-700 p-4 text-center">
-                <p className="text-white text-xl font-bold mb-1">
-                  +60 SECONDS
-                </p>
-                <p className="text-yellow-400 text-2xl font-bold">
-                  20 TOKENS
-                </p>
-              </div>
-
-              <div className="text-center text-zinc-400 text-sm">
-                Balance: <span className="text-white font-bold">{availableTokens} 🪙</span>
-              </div>
-
-              {!canAfford && (
-                <div className="bg-red-900/50 border border-red-700 p-2 text-center">
-                  <p className="text-red-300 text-xs font-bold">
-                    INSUFFICIENT TOKENS
-                  </p>
-                </div>
-              )}
-
-              <button
-                onClick={handleBuyTime}
-                disabled={!canAfford}
-                className={`w-full py-3 text-lg font-bold border-2 ${
-                  canAfford 
-                    ? 'bg-red-600 border-red-500 text-white hover:bg-red-700' 
-                    : 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {canAfford ? 'BUY' : 'NOT ENOUGH'}
-              </button>
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-red-600">
+          <div className="text-white text-center space-y-8 px-8">
+            <div className="text-7xl font-bold tracking-widest animate-pulse">
+              TIME RUNNING OUT
             </div>
+            
+            <div className="text-5xl font-bold">
+              BUY 1 MINUTE FOR 20 TOKENS
+            </div>
+
+            <button
+              onClick={canAfford ? handleBuyTime : undefined}
+              disabled={!canAfford}
+              className={`text-4xl font-bold px-16 py-6 border-4 transition-all ${
+                canAfford 
+                  ? 'bg-white text-red-600 border-white hover:bg-red-100 cursor-pointer' 
+                  : 'bg-gray-800 text-gray-400 border-gray-600 cursor-not-allowed'
+              }`}
+            >
+              {canAfford ? 'BUY' : 'LOW BALANCE'}
+            </button>
           </div>
         </div>
       )}

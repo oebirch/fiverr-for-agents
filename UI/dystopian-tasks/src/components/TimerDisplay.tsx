@@ -208,79 +208,56 @@ export function TimerDisplay({ maxTime, isActive, onTimeUp, availableTokens = 0,
         </div>
       </div>
 
-      {/* Purchase Time Popup - Fullscreen */}
+      {/* Purchase Time Popup - Simple/Cluttered */}
       {showPurchasePopup && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="w-full h-full flex flex-col items-center justify-center p-8 relative">
-            {/* Close button */}
-            <Button
-              variant="ghost"
-              size="sm"
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90">
+          <div className="bg-zinc-900 border-2 border-red-600 p-6 max-w-md w-full mx-4 relative">
+            {/* Close X */}
+            <button
               onClick={() => setShowPurchasePopup(false)}
-              className="absolute top-8 right-8 text-red-400 hover:text-red-300 hover:bg-red-900/50 z-10"
+              className="absolute top-2 right-2 text-red-400 hover:text-red-300 text-xl"
             >
-              <X className="h-8 w-8" />
-            </Button>
+              ✕
+            </button>
 
-            {/* Main content */}
-            <div className="max-w-4xl w-full space-y-12 text-center">
-              {/* Title */}
-              <div className="space-y-4">
-                <h1 className="text-8xl font-bold text-red-500 animate-pulse drop-shadow-2xl">
-                  ⚠️ TIME RUNNING OUT!
-                </h1>
-                <p className="text-4xl text-red-300 font-bold">
-                  Your productivity is at risk!
+            {/* Simple content */}
+            <div className="space-y-4">
+              <h2 className="text-red-500 text-3xl font-bold text-center animate-pulse">
+                ⚠️ TIME RUNNING OUT
+              </h2>
+              
+              <div className="bg-zinc-800 border border-zinc-700 p-4 text-center">
+                <p className="text-white text-xl font-bold mb-1">
+                  +60 SECONDS
+                </p>
+                <p className="text-yellow-400 text-2xl font-bold">
+                  20 TOKENS
                 </p>
               </div>
 
-              {/* Offer */}
-              <div className="bg-red-950/80 border-4 border-red-700 rounded-2xl p-12 space-y-8">
-                <div className="space-y-4">
-                  <p className="text-6xl font-bold text-red-100">
-                    BUY 1 MINUTE
-                  </p>
-                  <p className="text-5xl font-bold text-yellow-400">
-                    FOR 20 TOKENS 🪙
-                  </p>
-                </div>
-
-                <p className="text-2xl text-red-200">
-                  Don't let your task fail! Extend your time now.
-                </p>
-
-                <div className="bg-red-900/70 border-2 border-red-600 rounded-xl px-8 py-6 inline-block">
-                  <p className="text-3xl text-red-200">
-                    Your Balance: <span className="font-bold text-yellow-400">{availableTokens} 🪙</span>
-                  </p>
-                </div>
+              <div className="text-center text-zinc-400 text-sm">
+                Balance: <span className="text-white font-bold">{availableTokens} 🪙</span>
               </div>
 
-              {/* Warning if insufficient */}
               {!canAfford && (
-                <div className="bg-red-900 border-4 border-red-600 rounded-xl p-8">
-                  <p className="text-3xl text-red-300 font-bold">
-                    ⚠️ INSUFFICIENT TOKENS
-                  </p>
-                  <p className="text-xl text-red-400 mt-2">
-                    Complete more tasks to earn tokens
+                <div className="bg-red-900/50 border border-red-700 p-2 text-center">
+                  <p className="text-red-300 text-xs font-bold">
+                    INSUFFICIENT TOKENS
                   </p>
                 </div>
               )}
 
-              {/* Purchase button */}
-              <Button
+              <button
                 onClick={handleBuyTime}
                 disabled={!canAfford}
-                className={`text-white text-4xl font-bold py-12 px-24 border-4 rounded-xl shadow-2xl transition-all ${
+                className={`w-full py-3 text-lg font-bold border-2 ${
                   canAfford 
-                    ? 'bg-red-600 hover:bg-red-500 border-red-400 animate-pulse hover:scale-105' 
-                    : 'bg-gray-700 border-gray-600 cursor-not-allowed opacity-60'
+                    ? 'bg-red-600 border-red-500 text-white hover:bg-red-700' 
+                    : 'bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed'
                 }`}
-                size="lg"
               >
-                {canAfford ? '💰 BUY NOW' : '🔒 INSUFFICIENT TOKENS'}
-              </Button>
+                {canAfford ? 'BUY' : 'NOT ENOUGH'}
+              </button>
             </div>
           </div>
         </div>

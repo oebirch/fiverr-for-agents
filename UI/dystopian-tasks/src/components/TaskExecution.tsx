@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { calculateTokens } from '@/lib/utils'
 
 interface Task {
   id: string
@@ -73,14 +74,21 @@ export function TaskExecution({ task, onSubmit, onResponseChange }: TaskExecutio
       </div>
     )
   }
+
+  const tokensEarned = calculateTokens(task.time_allowed_to_complete, task.body.length);
   
   return (
     <div className="h-[calc(100vh-100px)] bg-zinc-900 p-4 overflow-y-auto">
       <Card className="bg-zinc-950 border-zinc-800">
         <CardHeader>
-          <CardTitle className="text-zinc-100 text-2xl">
-            {task.title}
-          </CardTitle>
+          <div className="flex items-start justify-between">
+            <CardTitle className="text-zinc-100 text-2xl">
+              {task.title}
+            </CardTitle>
+            <div className="bg-yellow-600 text-zinc-950 px-3 py-1 rounded font-bold text-sm">
+              🪙 {tokensEarned} tokens
+            </div>
+          </div>
         </CardHeader>
         
         <CardContent className="space-y-6">

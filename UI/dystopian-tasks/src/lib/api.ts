@@ -132,14 +132,9 @@ export async function getProfile(humanId: string = PROFILE_ID) {
     );
     const completedTaskIds = completedTasks.map((t: any) => t.id);
     
-    // Calculate total tokens earned from completed tasks
-    const totalTokens = completedTasks.reduce((sum: number, task: any) => {
-      const tokens = calculateTaskTokens(task.time_allowed_to_complete, task.prompt?.length || 0);
-      return sum + tokens;
-    }, 0);
-    
     // Get ratings for this human's completed tasks
     let ratings: any[] = [];
+    let ratingsMap: any = {};
     if (completedTaskIds.length > 0) {
       const ratingsResponse = await fetch(`${API_BASE_URL}/api/ratings`, {
         cache: 'no-store',
@@ -153,8 +148,23 @@ export async function getProfile(humanId: string = PROFILE_ID) {
         ratings = ratingsData.ratings.filter((r: any) => 
           r.tasks && r.tasks.human_id === humanId
         );
+        // Create map for quick lookup
+        ratings.forEach((r: any) => {
+          ratingsMap[r.task_id] = r;
+        });
       }
     }
+    
+    // Calculate total tokens earned ONLY from reviewed completed tasks
+    const totalTokens = completedTasks.reduce((sum: number, task: any) => {
+      const rating = ratingsMap[task.id];
+      // Only count tokens if the task has been reviewed
+      if (rating && rating.score !== undefined) {
+        const tokens = calculateTaskTokens(task.time_allowed_to_complete, task.prompt?.length || 0, rating.score);
+        return sum + tokens;
+      }
+      return sum;
+    }, 0);
     
     const averageRating = ratings.length > 0 
       ? ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length

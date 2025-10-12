@@ -208,60 +208,81 @@ export function TimerDisplay({ maxTime, isActive, onTimeUp, availableTokens = 0,
         </div>
       </div>
 
-      {/* Purchase Time Popup */}
+      {/* Purchase Time Popup - Fullscreen */}
       {showPurchasePopup && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <Card className="w-[400px] bg-red-950 border-red-700 border-4">
-            <CardHeader className="flex flex-row items-start justify-between pb-2">
-              <CardTitle className="text-red-100 text-2xl font-bold animate-pulse">
-                ⚠️ TIME RUNNING OUT!
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPurchasePopup(false)}
-                className="text-red-400 hover:text-red-300 hover:bg-red-900/50"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-4">
-              <div className="text-center">
-                <p className="text-red-200 text-xl font-bold mb-2">
-                  BUY 1 MINUTE FOR 20 TOKENS
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="w-full h-full flex flex-col items-center justify-center p-8 relative">
+            {/* Close button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPurchasePopup(false)}
+              className="absolute top-8 right-8 text-red-400 hover:text-red-300 hover:bg-red-900/50 z-10"
+            >
+              <X className="h-8 w-8" />
+            </Button>
+
+            {/* Main content */}
+            <div className="max-w-4xl w-full space-y-12 text-center">
+              {/* Title */}
+              <div className="space-y-4">
+                <h1 className="text-8xl font-bold text-red-500 animate-pulse drop-shadow-2xl">
+                  ⚠️ TIME RUNNING OUT!
+                </h1>
+                <p className="text-4xl text-red-300 font-bold">
+                  Your productivity is at risk!
                 </p>
-                <p className="text-red-300 text-sm mb-3">
+              </div>
+
+              {/* Offer */}
+              <div className="bg-red-950/80 border-4 border-red-700 rounded-2xl p-12 space-y-8">
+                <div className="space-y-4">
+                  <p className="text-6xl font-bold text-red-100">
+                    BUY 1 MINUTE
+                  </p>
+                  <p className="text-5xl font-bold text-yellow-400">
+                    FOR 20 TOKENS 🪙
+                  </p>
+                </div>
+
+                <p className="text-2xl text-red-200">
                   Don't let your task fail! Extend your time now.
                 </p>
-                <div className="bg-red-900/50 border border-red-700 rounded px-4 py-2">
-                  <p className="text-red-200 text-sm">
+
+                <div className="bg-red-900/70 border-2 border-red-600 rounded-xl px-8 py-6 inline-block">
+                  <p className="text-3xl text-red-200">
                     Your Balance: <span className="font-bold text-yellow-400">{availableTokens} 🪙</span>
                   </p>
                 </div>
               </div>
 
+              {/* Warning if insufficient */}
               {!canAfford && (
-                <div className="bg-red-900 border border-red-600 rounded p-3">
-                  <p className="text-red-300 text-sm text-center font-semibold">
+                <div className="bg-red-900 border-4 border-red-600 rounded-xl p-8">
+                  <p className="text-3xl text-red-300 font-bold">
                     ⚠️ INSUFFICIENT TOKENS
+                  </p>
+                  <p className="text-xl text-red-400 mt-2">
+                    Complete more tasks to earn tokens
                   </p>
                 </div>
               )}
 
+              {/* Purchase button */}
               <Button
                 onClick={handleBuyTime}
                 disabled={!canAfford}
-                className={`w-full text-white text-xl font-bold py-6 border-2 ${
+                className={`text-white text-4xl font-bold py-12 px-24 border-4 rounded-xl shadow-2xl transition-all ${
                   canAfford 
-                    ? 'bg-red-600 hover:bg-red-500 border-red-400 animate-pulse' 
-                    : 'bg-gray-700 border-gray-600 cursor-not-allowed opacity-80'
+                    ? 'bg-red-600 hover:bg-red-500 border-red-400 animate-pulse hover:scale-105' 
+                    : 'bg-gray-700 border-gray-600 cursor-not-allowed opacity-60'
                 }`}
                 size="lg"
               >
                 {canAfford ? '💰 BUY NOW' : '🔒 INSUFFICIENT TOKENS'}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </>

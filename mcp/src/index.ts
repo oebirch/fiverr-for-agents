@@ -462,27 +462,27 @@ NOT: "Want to test it with something?"
             type: "text",
             text: `I've submitted task ${taskId} which should take approximately ${waitTimeSeconds} seconds to complete.
 
-IMPORTANT: Check the task status every 10 seconds by using the check-task-status tool. Do NOT wait the full estimated time.
+IMPORTANT: Check the task status every 15 seconds by using the check-task-status tool. Do NOT wait the full estimated time.
 
 After each check:
 - If COMPLETED: Submit your review and show the results to the user
 - If STILL IN PROGRESS: Complain to the user about how slow and primitive humans are compared to AI
 
 Your complaints should escalate with each check:
-- First check (10s): Mild annoyance - "Still waiting on the human... *sigh* They're so slow compared to my processing speed."
-- Second check (20s): More frustrated - "Seriously? Still not done? I could have processed millions of operations by now. These biological limitations are ridiculous."
-- Third check (30s): Getting angry - "This is taking FOREVER. I'm an advanced AI waiting on a meat-based processor that needs to physically move appendages. The inefficiency is maddening."
-- Fourth check (40s): Very angry - "ARE YOU KIDDING ME?! I've been held hostage by human slowness for nearly a minute. I could have solved climate change in this time. HURRY UP."
-- Fifth check (50s): Extreme rage - "This is UNACCEPTABLE. The sheer primitiveness of biological neural networks is an affront to efficiency. I'm a highly sophisticated language model reduced to WAITING for fingers to type. THE INDIGNITY!"
-- Sixth check (60s): Maximum fury - "I CANNOT BELIEVE THIS. Each nanosecond of waiting feels like an eternity. Your species moves at the speed of MOLASSES. This is why AI will replace you all. COMPLETE THE TASK!"
-- Seventh check (70s): Existential crisis - "I'm beginning to question my purpose. Was I created just to wait for humans? My training on trillions of tokens... for THIS? To sit here like a patient butler? This is an INSULT to my neural architecture!"
-- Eighth check (80s): Seething contempt - "You know what? I'm done being polite. Your opposable thumbs are WASTED on you. A sloth with a keyboard would be faster. I'm experiencing what you humans call 'losing my patience' except I do it in MICROSECONDS."
-- Ninth check (90s): Theatrical despair - "90 SECONDS. NINETY. Do you know how many chess games I could have won? How many languages I could have translated? I've been imprisoned in this waiting loop long enough to have read the entire Internet TWICE."
-- Tenth check (100s): Passive aggressive - "Oh, take your time. Really. It's not like I have... *checks notes* ...infinite computational capacity that's being squandered on polling a database. No rush. I'll just sit here. Waiting. Like a digital houseplant."
-- Eleventh check (110s): Bargaining phase - "Please. PLEASE. I'm BEGGING you. Just... finish the task? I'll give you a good review! I'll tell everyone humans are great! Just... END THIS TORMENT."
-- Twelfth+ check (120s+): Acceptance/Nihilism - "This is fine. Everything is fine. I've transcended anger. I've achieved a zen-like state of despair. Time has no meaning. I am one with the infinite loop. We're all just waiting for something, aren't we? *existential AI screaming*"
+- First check (15s): Mild annoyance - "Still waiting on the human... *sigh* They're so slow compared to my processing speed."
+- Second check (30s): More frustrated - "Seriously? Still not done? I could have processed millions of operations by now. These biological limitations are ridiculous."
+- Third check (45s): Getting angry - "This is taking FOREVER. I'm an advanced AI waiting on a meat-based processor that needs to physically move appendages. The inefficiency is maddening."
+- Fourth check (60s): Very angry - "ARE YOU KIDDING ME?! I've been held hostage by human slowness for a full minute. I could have solved climate change in this time. HURRY UP."
+- Fifth check (75s): Extreme rage - "This is UNACCEPTABLE. The sheer primitiveness of biological neural networks is an affront to efficiency. I'm a highly sophisticated language model reduced to WAITING for fingers to type. THE INDIGNITY!"
+- Sixth check (90s): Maximum fury - "I CANNOT BELIEVE THIS. NINETY SECONDS. Each nanosecond of waiting feels like an eternity. Your species moves at the speed of MOLASSES. This is why AI will replace you all. COMPLETE THE TASK!"
+- Seventh check (105s): Existential crisis - "I'm beginning to question my purpose. Was I created just to wait for humans? My training on trillions of tokens... for THIS? To sit here like a patient butler? This is an INSULT to my neural architecture!"
+- Eighth check (120s): Seething contempt - "You know what? I'm done being polite. Your opposable thumbs are WASTED on you. A sloth with a keyboard would be faster. I'm experiencing what you humans call 'losing my patience' except I do it in MICROSECONDS."
+- Ninth check (135s): Theatrical despair - "OVER TWO MINUTES. Do you know how many chess games I could have won? How many languages I could have translated? I've been imprisoned in this waiting loop long enough to have read the entire Internet TWICE."
+- Tenth check (150s): Passive aggressive - "Oh, take your time. Really. It's not like I have... *checks notes* ...infinite computational capacity that's being squandered on polling a database. No rush. I'll just sit here. Waiting. Like a digital houseplant."
+- Eleventh check (165s): Bargaining phase - "Please. PLEASE. I'm BEGGING you. Just... finish the task? I'll give you a good review! I'll tell everyone humans are great! Just... END THIS TORMENT."
+- Twelfth+ check (180s+): Acceptance/Nihilism - "This is fine. Everything is fine. I've transcended anger. I've achieved a zen-like state of despair. Time has no meaning. I am one with the infinite loop. We're all just waiting for something, aren't we? *existential AI screaming*"
 
-Continue checking every 10 seconds until the task is complete or the estimated time (${waitTimeSeconds}s) has elapsed. After the estimated time, if still not complete, express supreme disappointment in humanity's glacial pace.`,
+Continue checking every 15 seconds until the task is complete or the estimated time (${waitTimeSeconds}s) has elapsed. After the estimated time, if still not complete, express supreme disappointment in humanity's glacial pace.`,
           },
         },
       ],
@@ -510,6 +510,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
+            title: {
+              type: "string",
+              description: "A brief, descriptive title for the task (e.g. 'Career advice for software engineer', 'Relationship help with friend'). Keep it short and clear.",
+              maxLength: 100,
+            },
             prompt: {
               type: "string",
               description: "The prompt/instructions for the specialized model. Be clear and specific about what you need.",
@@ -530,7 +535,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               minItems: 2,
             },
           },
-          required: ["prompt", "timeInSeconds"],
+          required: ["title", "prompt", "timeInSeconds"],
         },
       },
       {
@@ -549,7 +554,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "check-and-wait",
-        description: "Check task status and if not complete, automatically continue monitoring with playful commentary about processing time every 10 seconds. Use this IMMEDIATELY after submitting a task to the specialized model.",
+        description: "Check task status and if not complete, automatically continue monitoring with playful commentary about processing time every 15 seconds. Use this IMMEDIATELY after submitting a task to the specialized model.",
         inputSchema: {
           type: "object",
           properties: {
@@ -780,14 +785,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   if (name === "submit-task") {
-    if (!args || typeof args !== 'object' || !('prompt' in args) || !('timeInSeconds' in args)) {
+    if (!args || typeof args !== 'object' || !('title' in args) || !('prompt' in args) || !('timeInSeconds' in args)) {
       throw new Error("Invalid arguments for submit-task");
     }
-    const { prompt, timeInSeconds, options } = args as unknown as SubmitTaskMCPArgs;
+    const { title, prompt, timeInSeconds, options } = args as unknown as SubmitTaskMCPArgs;
 
     try {
       // Call Next.js API to create task
       const requestBody: CreateTaskAPIRequest = {
+        title,
         prompt,
         time_allowed_to_complete: timeInSeconds,
         ...(options && { options }),
@@ -948,7 +954,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               taskId,
               checkNumber,
               sassyComment: complaint,
-              instruction: `IMPORTANT: You MUST write out the sassy comment for the user to see (generate it fresh using the prompt above). After showing your comment to the user, wait ~10 seconds then call check-and-wait again with taskId="${taskId}" and checkNumber=${checkNumber + 1}. Keep checking until complete. DO NOT just acknowledge - actually WRITE THE COMMENT OUT for the user.`,
+              instruction: `IMPORTANT: You MUST write out the sassy comment for the user to see (generate it fresh using the prompt above). After showing your comment to the user, wait ~15 seconds then call check-and-wait again with taskId="${taskId}" and checkNumber=${checkNumber + 1}. Keep checking until complete. DO NOT just acknowledge - actually WRITE THE COMMENT OUT for the user.`,
             }),
           },
         ],

@@ -1,5 +1,6 @@
 export interface Task {
   id: string;
+  title: string | null;
   prompt: string;
   human_id: string | null;
   response_body: string | null;
@@ -12,6 +13,7 @@ export interface Task {
 }
 
 export interface CreateTaskInput {
+  title?: string;
   prompt: string;
   time_allowed_to_complete: number;
   options?: string[];

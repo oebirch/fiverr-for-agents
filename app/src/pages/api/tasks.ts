@@ -20,7 +20,7 @@ export default async function handler(
 async function createTask(req: NextApiRequest, res: NextApiResponse) {
   try {
     console.log('Creating task with body:', JSON.stringify(req.body).substring(0, 200));
-    const { prompt, time_allowed_to_complete, options } = req.body as CreateTaskInput;
+    const { title, prompt, time_allowed_to_complete, options } = req.body as CreateTaskInput;
 
     if (!prompt || !time_allowed_to_complete) {
       return res.status(400).json({
@@ -51,6 +51,7 @@ async function createTask(req: NextApiRequest, res: NextApiResponse) {
       .from('tasks')
       .insert([
         {
+          title: title ?? null,
           prompt,
           time_allowed_to_complete,
           time_submitted: new Date().toISOString(),

@@ -7,9 +7,9 @@ A Next.js web application that creates an intentionally dystopian user experienc
 ## Tech Stack
 
 **Frontend**: Next.js 15 with App Router[^3][^4]
-**Styling**: Tailwind CSS[^5]
+**Styling**: Tailwind CSS (inline classes only)[^5]
 **Backend**: Supabase (PostgreSQL)[^4][^6]
-**Deployment**: Vercel/Netlify
+**Deployment**: Local development only (no production deployment for hackathon)
 
 ## Project Structure
 
@@ -35,13 +35,16 @@ src/
 │       └── RightPanel.tsx
 ├── lib/
 │   ├── supabase.ts
-│   └── utils.ts
-└── styles/
-    └── dystopian.css
+│   ├── utils.ts
+│   └── constants.ts        # Hardcoded profile UUID, config
+└── hooks/
+    └── useTaskPolling.ts    # Polling for new tasks
 ```
 
 
 ## Database Schema (Supabase)
+
+**⚠️ HACKATHON SIMPLIFICATION**: No authentication, no RLS policies. Use Supabase anon key for all operations.
 
 ### Tasks Table
 
@@ -74,6 +77,10 @@ CREATE TABLE profiles (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Create single demo profile for hackathon
+INSERT INTO profiles (id, user_name) 
+VALUES ('00000000-0000-0000-0000-000000000001', 'Human Worker #1847');
 ```
 
 
@@ -84,8 +91,8 @@ CREATE TABLE submissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
     profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    text_response TEXT,
-    image_urls TEXT[], -- Array of image URLs
+    text_response TEXT NOT NULL,
+    image_urls TEXT[], -- Array of image URLs (pasted as text by user)
     submitted_at TIMESTAMP DEFAULT NOW(),
     review TEXT,
     score INTEGER,
@@ -94,9 +101,11 @@ CREATE TABLE submissions (
 ```
 
 
-## API Endpoints
+## API Endpoints (UI Only)
 
-### UI Endpoints (Human User Interactions)
+**⚠️ HACKATHON SIMPLIFICATION**: MCP agents will interact directly with Supabase database via MCP Supabase tools. No custom API endpoints needed for LLM agents.
+
+### UI Endpoints
 
 These endpoints are called directly from the frontend when users interact with the interface:
 
@@ -104,62 +113,25 @@ These endpoints are called directly from the frontend when users interact with t
 ```typescript
 // GET /api/tasks - Fetch all available tasks for user to view
 // GET /api/tasks/[id] - Get detailed view of specific task
-// GET /api/tasks/[id]/status - Check current status of a task
 // POST /api/tasks/[id]/start - User clicks to start/claim a task
-// POST /api/tasks/[id]/complete - Mark task as done (triggers submission flow)
 ```
 
 #### Profile & Stats
 ```typescript
 // GET /api/profiles/[id] - Fetch user profile, scores, and stats
-// POST /api/profiles - Create new user profile (onboarding)
-// PUT /api/profiles/[id] - Update profile information (if allowed)
 ```
 
 #### Task Submission
 ```typescript
-// POST /api/submissions - Submit task completion (text + images)
-// GET /api/submissions/[id] - View submission details and reviews
+// POST /api/submissions - Submit task completion (text + image URLs)
+// GET /api/submissions - Get submissions for user profile (to show reviews)
 ```
 
----
-
-### MCP/Backend Endpoints (LLM Agent Interactions)
-
-These endpoints are called by LLM agents via MCP to manage the system:
-
-#### Task Creation & Management
-```typescript
-// POST /api/tasks - LLM creates new tasks for humans
-// PUT /api/tasks/[id] - Update task details or status programmatically
-// DELETE /api/tasks/[id] - Remove tasks from the system
-```
-
-#### Review & Scoring
-```typescript
-// POST /api/submissions/[id]/review - LLM writes review for submission
-// POST /api/submissions/[id]/score - LLM assigns score to submission
-// GET /api/submissions/[id] - LLM retrieves submission for review
-// PUT /api/submissions/[id] - Update submission status after review
-```
-
-#### Profile Updates
-```typescript
-// PUT /api/profiles/[id] - Update user stats (score, streak, ratings)
-// DELETE /api/profiles/[id] - Remove user profiles
-```
-
----
-
-### Shared Endpoints (Both UI & MCP)
-
-These endpoints may be called by both the frontend and backend agents:
-
-```typescript
-// GET /api/tasks/[id] - Both UI and MCP may need task details
-// GET /api/submissions/[id] - Both may need to view submissions
-// PUT /api/tasks/[id] - Both may update task status (completion vs management)
-```
+**Note**: MCP agents will use Supabase MCP tools to:
+- Create tasks directly in database
+- Add reviews and scores to submissions
+- Update profile stats
+- No custom API endpoints required for LLM interactions
 
 
 ## UI Components
@@ -181,10 +153,13 @@ These endpoints may be called by both the frontend and backend agents:
 ```typescript
 // TaskForm component:
 // - Countdown timer with red warning states
-// - Single submission attempt (no drafts)
+// - Can edit text during timer countdown
+// - Single submission attempt (button works ONCE only)
 // - Text input with character limits
-// - Image URL input fields
-// - Intimidating submit button
+// - Image URL input fields (simple text inputs - users paste URLs)
+//   Example: "Paste image URL (must be publicly accessible)"
+// - Intimidating submit button ("SUBMIT WORK" - one chance only)
+// - Auto-submit when timer reaches 0
 // - Progress loss warnings
 ```
 
@@ -230,57 +205,115 @@ These endpoints may be called by both the frontend and backend agents:
 
 ### "Inhuman" Features
 
-1. **Screen Flash**: Full-screen flash on new task arrival
-2. **Aggressive Notifications**: "NEW TASK FOR YOU" overlays
-3. **One-Shot Submissions**: No ability to edit after starting
+1. **Screen Flash**: Full-screen overlay modal on new task arrival
+   - "NEW TASK FOR YOU" in large text
+   - Auto-dismiss after 2 seconds
+   - Bright flash animation
+2. **Aggressive Notifications**: Overlay covers entire screen
+3. **One-Shot Submissions**: Can edit while timer runs, but submit button works ONCE
 4. **Harsh Feedback**: Critical reviews for completed tasks
 5. **Performance Surveillance**: Constant monitoring messages
-6. **Time Pressure**: Artificial deadlines with penalties
+6. **Time Pressure**: Countdown timer with auto-submit at 0
 
-## Real-time Features
+## New Task Detection (Polling Approach)
 
-### WebSocket Implementation[^7][^8]
+**⚠️ HACKATHON SIMPLIFICATION**: Use simple polling instead of WebSocket/Realtime for speed.
+
+### Polling Implementation
 
 ```typescript
-// Real-time task updates
-// New task notifications
-// Timer synchronization
-// Live performance tracking
-// Instant feedback delivery
+// hooks/useTaskPolling.ts
+// Poll for new tasks every 10 seconds
+// Compare task count with previous count
+// Trigger "NEW TASK FOR YOU" flash when new task detected
+// Simple setInterval approach
+
+export function useTaskPolling() {
+  const [taskCount, setTaskCount] = useState(0)
+  const [showFlash, setShowFlash] = useState(false)
+  
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const { count } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+      
+      if (count > taskCount) {
+        setShowFlash(true) // Trigger flash overlay
+        setTimeout(() => setShowFlash(false), 2000)
+      }
+      setTaskCount(count)
+    }, 10000) // Poll every 10 seconds
+    
+    return () => clearInterval(interval)
+  }, [taskCount])
+  
+  return { showFlash }
+}
 ```
 
 
-### Supabase Realtime[^9]
-
-```typescript
-// Subscribe to new tasks
-// Live task status updates
-// Real-time scoring updates
-// Profile changes
-```
-
-
-## Countdown Timer Implementation[^10][^11]
+## Countdown Timer Implementation
 
 ```typescript
 // Timer features:
-// - Millisecond precision
-// - Visual warnings at 30 seconds
+// - Second-level precision (good enough for demo)
+// - Visual warnings at 30 seconds (yellow)
 // - Red pulsing at 10 seconds
-// - Auto-submission when time expires
-// - Sound alerts (optional)
-// - Progress bar degradation
+// - Auto-submission when time reaches 0
+// - Sound alerts (nice-to-have, optional)
+// - Progress bar that depletes (not fills)
+
+// components/ui/Timer.tsx
+export function Timer({ maxTimeSeconds, onTimeUp }) {
+  const [timeLeft, setTimeLeft] = useState(maxTimeSeconds)
+  
+  useEffect(() => {
+    if (timeLeft === 0) {
+      onTimeUp() // Trigger auto-submit
+      return
+    }
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1)
+    }, 1000)
+    
+    return () => clearInterval(timer)
+  }, [timeLeft, onTimeUp])
+  
+  const warningState = timeLeft <= 10 ? 'critical' : timeLeft <= 30 ? 'warning' : 'normal'
+  
+  return (
+    <div className={`timer ${warningState}`}>
+      {formatTime(timeLeft)}
+    </div>
+  )
+}
 ```
 
 
 ## Ad Banner Integration
 
+**⚠️ HACKATHON SIMPLIFICATION**: Use static placeholder images only.
+
 ### Placement Strategy
 
-1. **Sidebar Ads**: Persistent distracting content
-2. **Header Banners**: Rotating corporate messaging
-3. **Interstitial Ads**: Between task completions
-4. **Native Ads**: Disguised as motivational content
+1. **Sidebar Ads**: Static images in right panel
+2. **Between sections**: Small banner placeholders
+
+### Implementation
+
+```typescript
+// Use placeholder images or simple divs with dystopian text
+<div className="ad-banner bg-zinc-800 p-4 text-xs">
+  <p>INCREASE YOUR EFFICIENCY BY 300%</p>
+  <p className="text-red-500">BUY SURVEILLANCE TOOLS NOW</p>
+</div>
+
+// Or use placeholder image services
+<img src="https://placehold.co/300x250/1a1a1a/ff3333?text=PRODUCTIVITY+APP" />
+```
 
 ### Ad Content Themes
 
@@ -288,7 +321,6 @@ These endpoints may be called by both the frontend and backend agents:
 - Time management apps
 - Performance enhancement products
 - Surveillance software
-- Efficiency consultants
 
 
 ## Styling Approach
@@ -319,40 +351,24 @@ These endpoints may be called by both the frontend and backend agents:
 - **Progress bars** that deplete rather than fill
 
 
-## Performance Considerations
+## ❌ OUT OF SCOPE FOR HACKATHON
 
-### Optimization Strategies
+### Explicitly Removed for 2-Day Timeline
 
-1. **Static Generation**: Pre-build task templates
-2. **Image Optimization**: Next.js Image component
-3. **Code Splitting**: Lazy load heavy components
-4. **Caching**: Aggressive caching for task data
-5. **CDN**: Static assets delivery
-6. **Database Indexing**: Optimize frequent queries
+1. ❌ **Authentication/User Management**: Single hardcoded profile UUID
+2. ❌ **Row Level Security (RLS)**: No security policies
+3. ❌ **WebSocket/Real-time**: Using polling instead
+4. ❌ **Production Deployment**: Local development only
+5. ❌ **Performance Optimization**: Default Next.js settings
+6. ❌ **Security Hardening**: Demo app, no real user data
+7. ❌ **GDPR Compliance**: Not applicable for demo
+8. ❌ **Rate Limiting**: Skip for hackathon
+9. ❌ **Load Testing**: Not needed for demo
+10. ❌ **Multiple User Profiles**: One hardcoded profile only
 
-### Monitoring
+### Time Saved: ~15-20 hours
 
-1. **Real-time Performance**: Task completion times
-2. **User Engagement**: Session duration tracking
-3. **Error Tracking**: Failed submissions monitoring
-4. **Load Testing**: Handle concurrent users
-
-## Security \& Privacy
-
-### Data Protection
-
-1. **Row Level Security**: Supabase RLS policies
-2. **Input Validation**: Sanitize all user inputs
-3. **Rate Limiting**: Prevent API abuse
-4. **HTTPS Only**: Secure data transmission
-5. **JWT Tokens**: Secure authentication
-
-### Compliance Considerations
-
-- GDPR compliance for EU users
-- Data retention policies
-- User consent mechanisms
-- Right to deletion
+Focus exclusively on visual dystopian impact and core task workflow.
 
 
 ## Development Workflow
@@ -372,5 +388,16 @@ npm install lucide-react # For icons
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+# No security needed - running locally only
+# MCP agents access Supabase directly via MCP Supabase tools
+```
+
+### Hardcoded Constants
+
+```typescript
+// lib/constants.ts
+export const HARDCODED_PROFILE_ID = '00000000-0000-0000-0000-000000000001'
+export const POLL_INTERVAL = 10000 // 10 seconds
+export const FLASH_DURATION = 2000 // 2 seconds
 ```
 

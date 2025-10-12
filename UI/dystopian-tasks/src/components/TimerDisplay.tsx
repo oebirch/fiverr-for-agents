@@ -211,6 +211,14 @@ export function TimerDisplay({ maxTime, isActive, onTimeUp, availableTokens = 0,
       {/* Purchase Time Popup - Fullscreen Flash */}
       {showPurchasePopup && (
         <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-red-600">
+          {/* Close button */}
+          <button
+            onClick={() => setShowPurchasePopup(false)}
+            className="absolute top-8 right-8 text-white hover:text-red-200 text-5xl font-bold"
+          >
+            ✕
+          </button>
+
           <div className="text-white text-center space-y-8 px-8">
             <div className="text-7xl font-bold tracking-widest animate-pulse">
               TIME RUNNING OUT

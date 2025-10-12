@@ -203,7 +203,11 @@ export default function Home() {
       <div className="grid grid-cols-12 gap-4 p-4">
         {/* Left Panel - 2 columns (narrow task list) */}
         <div className="col-span-2">
-          <TaskList tasks={tasks} onStartTask={handleStartTask} />
+          <TaskList 
+            tasks={tasks} 
+            onStartTask={handleStartTask}
+            isTaskActive={timerActive}
+          />
         </div>
         
         {/* Middle Panel - 7 columns (WIDEST - main work area) */}
